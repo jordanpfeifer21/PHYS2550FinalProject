@@ -6,7 +6,7 @@ from functools import partial
 ############## Preprocessing on Oscar / local machine ##########################
 
 def csv_preprocces(filepaths, test_ratio=0.2, valid_ratio=0.1, num_features=2100, 
-                     shuffle_buffer_size=10000, batch_size=32, seed=42):
+                     shuffle_buffer_size=10000, batch_size=32, seed=42, one_channel=False):
     '''
     Read and preprocess single or multiple .csv data files. First, we create a 
     Tensorflow dataset containing the list of filepaths we want to read. Then, we
@@ -23,6 +23,7 @@ def csv_preprocces(filepaths, test_ratio=0.2, valid_ratio=0.1, num_features=2100
     :param shuffle_buffer_size: Shuffle the dataset using a buffer of size. The default value 10000 could be higher if the system doesn't crush.
     :param batch_size: Size of a batch the final datasets are split into.
     :param seed: Random seed. The default value is 42 to ensure reproducibility of the results.
+    :param one_channel: Determines whether the returned tensors are split into three channels (pT, eta, phi) when set to False, or if they're combined into one channel when set to True.
 
     :return: TensorFlow datasets split into batches, ready to be for training or evaluation.
     '''
@@ -31,14 +32,15 @@ def csv_preprocces(filepaths, test_ratio=0.2, valid_ratio=0.1, num_features=2100
         filepaths, seed=seed # Shuffle filepaths.
     )
     
-    # Read from the files.
+    # To process lines from files.
     dataset = dataset_filepaths.interleave(
         lambda filepath: tf.data.TextLineDataset(filepath).skip(1),
         num_parallel_calls=tf.data.AUTOTUNE # Read files in parallel.
     )
     
     # Convert strings into floats.
-    dataset = dataset.map(partial(parse_csv_line, num_features=num_features), num_parallel_calls=tf.data.AUTOTUNE)
+    dataset = dataset.map(partial(parse_csv_line, num_features=num_features, one_channel=one_channel), 
+                          num_parallel_calls=tf.data.AUTOTUNE) # To do it in parallel.
 
     # Split into train, test, and valid datasets.
     ## Not the best way to do it, but this way we don't waste any resources.
@@ -56,11 +58,10 @@ def csv_preprocces(filepaths, test_ratio=0.2, valid_ratio=0.1, num_features=2100
     X_train, X_valid = dataset_split_train_test(dataset=X_train_full, test_ratio=0.1,
                                                 shuffle_buffer_size=shuffle_buffer_size,
                                                 instances=train_instances)
-
     # Standardization.
     print('Standardization...')
     X_train_mean, X_train_std_dev = compute_stats(X_train,
-                                                #   instances=tf.data.experimental.cardinality(X_train).numpy() # If the system allows.
+                                                #   instances > 50,000 # If the system allows.
                                                   )
     X_train_std_scaled = standardization(X_train, X_train_mean=X_train_mean, X_train_std_dev=X_train_std_dev)
     X_test_std_scaled = standardization(X_test, X_train_mean=X_train_mean, X_train_std_dev=X_train_std_dev)
@@ -80,17 +81,19 @@ def csv_preprocces(filepaths, test_ratio=0.2, valid_ratio=0.1, num_features=2100
     print(f'Train dataset: {train_len} elements in total.')
     print(f'Test dataset {test_len} elements.')
     print(f'Validation dataset {valid_len} elements.')
-    print('---------------------------------------------------------')
+    print('----------------- one_channel parameter -----------------')
+    print(f'one_channel = {one_channel}')
+    print(f'Determines whether the returned tensors are split into three channels (pT, eta, phi) when set to False, or if they are combined into one channel when set to True.')
     
     return X_train_std_scaled, X_test_std_scaled, X_valid_std_scaled
 
 
 
-def compute_stats(data, instances=50000):
+def compute_stats(data, instances=50000): # If the machine is powerful enough, could be a greater value.
     # Compute the mean and standard deviation of features in a TensorFlow dataset.
     total_sum = tf.constant(0, dtype=tf.float32)
     num_elements = tf.constant(0, dtype=tf.float32)
-
+    
     # Calculate mean.
     for item in data.take(instances):
         total_sum += item
@@ -103,15 +106,19 @@ def compute_stats(data, instances=50000):
         total_squared_error += (item - mean) ** 2
     variance = total_squared_error / num_elements
     std_dev = tf.sqrt(variance)
-
     return tf.data.Dataset.from_tensors(mean), tf.data.Dataset.from_tensors(std_dev)
-    
 
-def parse_csv_line(line, num_features):
+
+def parse_csv_line(line, num_features, one_channel=False):
     # Function taking one CSV line and parsing it.
     def_values = [.0] * num_features # To replace missing values.
-    fields = tf.io.decode_csv(line, record_defaults=def_values)
-    return tf.stack(fields)
+    fields = tf.io.decode_csv(line, record_defaults=def_values) # Each column maps to one tensor.
+    columns = tf.stack(fields) # Stack tensors together to make a row.
+    if one_channel == False:
+        return tf.reshape(columns, [3, 700])
+    else:
+        return columns
+
 
 def dataset_split_train_test(dataset, test_ratio, instances, shuffle_buffer_size, seed=42):
     # Split a TensorFlow dataset into training and test ones.
@@ -122,21 +129,16 @@ def dataset_split_train_test(dataset, test_ratio, instances, shuffle_buffer_size
     X_test = dataset.take(test_size)
     return X_train, X_test
 
+
 def standardization(data, X_train_mean, X_train_std_dev):
     # Perform standardization.
     data_len = tf.data.experimental.cardinality(data).numpy()
     X_train_mean = X_train_mean.repeat(data_len)
     X_train_std_dev = X_train_std_dev.repeat(data_len)
+    print(f'here: {tf.data.experimental.cardinality(X_train_mean)}')
     data_scaled = tf.data.Dataset.zip((data, X_train_mean, X_train_std_dev))
     data_scaled = data_scaled.map(lambda x, y, z: tf.where(z == 0., tf.zeros_like(x), (x - y) / z)) # Remove NaN when divide by 0.
     return data_scaled
-
-
-
-
-
-
-
 
 
 ############## Functions below might be useful for Oscar #######################
