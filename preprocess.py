@@ -64,7 +64,7 @@ def give_label(data):
 
 def csv_preprocces(filepaths, test_ratio=0.2, valid_ratio=0.1, num_features=2100, 
                      shuffle_buffer_size=10000, batch_size=32, seed=42, one_channel=False,
-                     training=True):
+                     labels=True):
     '''
     Read and preprocess single or multiple .csv data files. First, we create a 
     Tensorflow dataset containing the list of filepaths we want to read. Then, we
@@ -82,7 +82,7 @@ def csv_preprocces(filepaths, test_ratio=0.2, valid_ratio=0.1, num_features=2100
     :param batch_size: Size of a batch the final datasets are split into.
     :param seed: Random seed. The default value is 42 to ensure reproducibility of the results.
     :param one_channel: Determines whether the returned tensors are split into three channels (pT, eta, phi) when set to False, or if they're combined into one channel when set to True.
-    :param training: 'True' if we preprocess the data to train the model, 'False' - to make predictions.
+    :param labels: 'True' if we preprocess the unlabelled dataset to train the model, 'False' - to make predictions.
 
     :return: TensorFlow datasets split into batches, ready to be for training or evaluation.
     '''
@@ -152,7 +152,7 @@ def csv_preprocces(filepaths, test_ratio=0.2, valid_ratio=0.1, num_features=2100
     print(f'one_channel = {one_channel}')
     print(f'Determines whether the returned tensors are split into three channels (pT, eta, phi) when set to False, or if they are combined into one channel when set to True.')
     
-    if training == True:
+    if labels == True:
         return give_label(X_train_std_scaled), give_label(X_test_std_scaled), give_label(X_valid_std_scaled)
     else:
         return X_train_std_scaled, X_test_std_scaled, X_valid_std_scaled
