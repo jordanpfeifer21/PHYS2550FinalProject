@@ -87,7 +87,7 @@ def test_loop(dataloader, model, loss_func):
 
 
 def train_model(dataloader, model, loss_func, optimizer, epochs, batch_size=32,
-                graph_transparency=True):
+                graph_transparency=True, graph_path=None):
     train_loss = np.zeros(epochs)
     train_accuracy = np.zeros(epochs)
     test_loss = np.zeros(epochs)
@@ -103,7 +103,8 @@ def train_model(dataloader, model, loss_func, optimizer, epochs, batch_size=32,
         )
         print("Done!")
 
-        visualization()
+        visualization(train_loss, train_accuracy, test_loss, test_accuracy,
+                      graph_transparency, graph_path)
 
     return train_loss, train_accuracy, test_loss, test_accuracy
 
