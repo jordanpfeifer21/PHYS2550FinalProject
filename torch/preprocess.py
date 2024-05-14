@@ -1,5 +1,5 @@
 import torch
-from torch.utils.data import Dataset
+from torch.utils.data import Dataset, DataLoader
 import numpy as np
 import pandas as pd
 
@@ -13,11 +13,9 @@ class AnomalyDetectionDataset(Dataset):
     
     def __getitem__(self, ind):
         item = self.data.iloc[ind].to_numpy(dtype='float32')
-        tuple_item = lambda x: (x, x)
-        item = np.array([tuple_item(i) for i in item])
+        # item = np.array([(x, x) for x in item])
         if self.three_channels:
             item = np.stack([item[:700], item[700:1400], item[-700:]], axis=0)
-        print(f'Generated tensor shape: {item.shape}')
         return torch.from_numpy(item)
 
 def device_change():
@@ -30,3 +28,13 @@ def device_change():
     )
     print(f"Using {device} device")
     return device
+
+
+def load_anomaly_dataset_csv(file_name, file_directory, batch_size, three_channels=True):
+    datasets = {}
+    for ind, (key, value) in enumerate(file_name.items()):
+        dataset = AnomalyDetectionDataset(f'{file_directory}/{value}.csv', three_channels=three_channels)
+        torch.manual_seed(42)
+        dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
+        datasets.update({key: dataloader})
+    return datasets
