@@ -1,5 +1,6 @@
 ## Anomaly Detection in Particle Physics Using AI at the LHC
 
+
 *Jordan Pfeifer, Ekin Secilmis, Egor Serebriakov*
 
 ### About the data used in the project
