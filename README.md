@@ -19,7 +19,7 @@ All datasets are stored as pandas DataFrames saved to compressed h5 format. Each
 
 1. [Overleaf Report](https://www.overleaf.com/7219896992pncptqkkxrfz#d5daf8)
 
-1. [Google Drive with Split Data ($\texttt{TensorFlow}$) and Preprocessed Data ($\texttt{torch})](https://drive.google.com/drive/folders/1MGpipM4VPwxlxCE4IA5QRMixz0L2cg88?usp=sharing)
+1. [Google Drive with Split Data (TensorFlow) and Preprocessed Data (torch)](https://drive.google.com/drive/folders/1MGpipM4VPwxlxCE4IA5QRMixz0L2cg88?usp=sharing)
 
    > Files *X_train_small.csv, X_test_small.csv, X_valid_small.csv* are smaller versions of background data that can be useful to build an appropriate model faster. *X_test_first.csv* is the data from the first box and so on.
 
