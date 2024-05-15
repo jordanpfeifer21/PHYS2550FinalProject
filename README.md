@@ -10,24 +10,16 @@ Additionally, we have a background sample of 1M events simulated using Pythia8 a
 
 All datasets are stored as pandas DataFrames saved to compressed h5 format. Each event consists of 700 particles (we might have some events with some degree of zero padding) and each particle has three coordinates (pT, eta, phi).
 
-### Notes 
+> [*Original dataset*](https://paperswithcode.com/dataset/lhc-olympics-2020)
+
+### Links
 
 1. [Google Slides](https://docs.google.com/presentation/d/1tQCU03cHe44oVzg05qOPGl-vTHJSb7w3zzfLtAVs7Js/edit?usp=sharing)
 
 1. [Overleaf Report](https://www.overleaf.com/7219896992pncptqkkxrfz#d5daf8)
 
-1. [Google Drive with Data](https://drive.google.com/drive/folders/12onHZDgDdSP05KVCV_v_vYbS3Afi49wM?usp=sharing)
+1. [Google Drive with Split Data ($\texttt{TensorFlow}$) and Preprocessed Data ($\texttt{torch})](https://drive.google.com/drive/folders/1MGpipM4VPwxlxCE4IA5QRMixz0L2cg88?usp=sharing)
 
-1. Current State of the Project:
+   > Files *X_train_small.csv, X_test_small.csv, X_valid_small.csv* are smaller versions of background data that can be useful to build an appropriate model faster. *X_test_first.csv* is the data from the first box and so on.
 
-- Oscar has a lot of problems using GPUs with TensorFlow, so I had to move to torch.
-
-- All the data on Google Drive that is inside *ready_to_use_torch* can be used for training and testing without any preprocessing.
-
-- Files *X_train_small.csv, X_test_small.csv, X_valid_small.csv* are smaller versions of background data that can be useful to build an appropriate model faster. *X_test_first.csv* is the data from the first box and so on.
-
-- Working directory is *torch* now: *train_test.ipynb* and *evaluation.ipynb* control everything.
-
-- To work with your own model, you just need to include its class into *model.py* and then import the model from jupyter.
-
-- In *evaluation.ipynb*, there are only basic graphs are plotted, so it is not the final script.
+1. [Google Drive with Model Parameters and Final Graphs](https://drive.google.com/drive/folders/1yE34yUAKLIokuPGRGah8HkCiBszSFL0y?usp=sharing)
